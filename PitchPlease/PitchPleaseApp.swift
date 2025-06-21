@@ -6,32 +6,18 @@
 //
 
 import SwiftUI
-import FirebaseCore
 
 @main
 struct PitchPleaseApp: App {
     
-    // Firebase manager voor authenticatie status
-    @StateObject private var firebaseManager = FirebaseManager.shared
-    
-    // App lifecycle configuratie
-    init() {
-        // Firebase configureren bij app start
-        FirebaseApp.configure()
-    }
+    // Lokale storage manager voor authenticatie status
+    @StateObject private var storageManager = LocalStorageManager.shared
     
     var body: some Scene {
         WindowGroup {
-            // Root view gebaseerd op authenticatie status
-            if firebaseManager.isUserLoggedIn {
-                // Gebruiker is ingelogd - toon main app
-                MainTabView()
-                    .environmentObject(firebaseManager)
-            } else {
-                // Gebruiker is niet ingelogd - toon login/signup
-                AuthenticationView()
-                    .environmentObject(firebaseManager)
-            }
+            // Tijdelijk login overslaan voor development
+            MainTabView()
+                .environmentObject(storageManager)
         }
     }
 }

@@ -1,5 +1,5 @@
 // Authentication Views voor login en registratie
-// Deze views zorgen voor gebruiker authenticatie via Firebase
+// Deze views zorgen voor gebruiker authenticatie via lokale opslag
 import SwiftUI
 
 // Main authentication view die switcht tussen login en signup
@@ -102,19 +102,12 @@ struct LoginView: View {
         isLoading = true
         errorMessage = ""
         
-        Task {
-            do {
-                try await FirebaseManager.shared.signIn(email: email, password: password)
-                
-                DispatchQueue.main.async {
-                    isLoading = false
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    isLoading = false
-                    errorMessage = "Login mislukt: \(error.localizedDescription)"
-                }
-            }
+        do {
+            try LocalStorageManager.shared.signIn(email: email, password: password)
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = "Login mislukt: \(error.localizedDescription)"
         }
     }
 }
@@ -207,23 +200,16 @@ struct SignUpView: View {
         isLoading = true
         errorMessage = ""
         
-        Task {
-            do {
-                try await FirebaseManager.shared.signUp(
-                    email: email,
-                    password: password,
-                    displayName: displayName
-                )
-                
-                DispatchQueue.main.async {
-                    isLoading = false
-                }
-            } catch {
-                DispatchQueue.main.async {
-                    isLoading = false
-                    errorMessage = "Registratie mislukt: \(error.localizedDescription)"
-                }
-            }
+        do {
+            try LocalStorageManager.shared.signUp(
+                email: email,
+                password: password,
+                displayName: displayName
+            )
+            isLoading = false
+        } catch {
+            isLoading = false
+            errorMessage = "Registratie mislukt: \(error.localizedDescription)"
         }
     }
 }

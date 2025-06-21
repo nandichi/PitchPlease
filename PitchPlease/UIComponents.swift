@@ -64,25 +64,131 @@ struct AlbumRowView: View {
     
     // Functie om gemiddelde rating te laden
     private func loadAverageRating() {
-        Task {
-            do {
-                let rating = try await AlbumRatingManager.shared.getAverageRating(for: album.id)
-                DispatchQueue.main.async {
-                    averageRating = rating
-                }
-            } catch {
-                print("Error loading average rating: \(error)")
-            }
-        }
+        let rating = LocalStorageManager.shared.getAverageRating(for: album.id)
+        averageRating = rating
     }
 }
 
-// Rating row view voor het tonen van een rating in een lijst
-struct RatingRowView: View {
-    let rating: AlbumRating
+// Moderne album row view voor het nieuwe design
+struct ModernAlbumRowView: View {
+    let album: SpotifyAlbum
+    @State private var averageRating: Double = 0.0
+    @State private var isLoaded = false
+    
+    var body: some View {
+        HStack(spacing: PitchSpacing.md) {
+            // Album artwork met moderne styling
+            AsyncImage(url: URL(string: album.imageUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                ZStack {
+                    LinearGradient.pitchCardGradient
+                    
+                    Image(systemName: "music.note")
+                        .font(.system(size: 24))
+                        .foregroundColor(.pitchTextTertiary)
+                }
+            }
+            .frame(width: 80, height: 80)
+            .cornerRadius(PitchRadius.md)
+            .pitchShadowMedium()
+            .overlay(
+                RoundedRectangle(cornerRadius: PitchRadius.md)
+                    .stroke(Color.white.opacity(0.2), lineWidth: 1)
+            )
+            
+            // Album informatie
+            VStack(alignment: .leading, spacing: PitchSpacing.xs) {
+                Text(album.name)
+                    .font(PitchTypography.headline)
+                    .foregroundColor(.pitchText)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+                
+                Text(album.artistNames)
+                    .font(PitchTypography.callout)
+                    .foregroundColor(.pitchTextSecondary)
+                    .lineLimit(1)
+                
+                Text(formatReleaseDate(album.releaseDate))
+                    .font(PitchTypography.caption)
+                    .foregroundColor(.pitchTextTertiary)
+                
+                // Rating met moderne styling
+                HStack(spacing: PitchSpacing.xs) {
+                    ModernStarRatingView(rating: averageRating, size: 14)
+                    
+                    if averageRating > 0 {
+                        Text(String(format: "%.1f", averageRating))
+                            .font(PitchTypography.caption)
+                            .foregroundColor(.pitchStarFilled)
+                            .fontWeight(.semibold)
+                    } else {
+                        Text("Nog geen ratings")
+                            .font(PitchTypography.caption2)
+                            .foregroundColor(.pitchTextTertiary)
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Modern chevron met accent kleur
+            Image(systemName: "chevron.right.circle.fill")
+                .font(.system(size: 24))
+                .foregroundStyle(LinearGradient.pitchAccentGradient)
+                .opacity(0.8)
+        }
+        .padding(PitchSpacing.md)
+        .background(
+            RoundedRectangle(cornerRadius: PitchRadius.lg)
+                .fill(LinearGradient.pitchCardGradient)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: PitchRadius.lg)
+                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        )
+        .pitchShadowMedium()
+        .scaleEffect(isLoaded ? 1.0 : 0.9)
+        .opacity(isLoaded ? 1.0 : 0.0)
+        .onAppear {
+            loadAverageRating()
+            withAnimation(.pitchSpring.delay(Double.random(in: 0...0.3))) {
+                isLoaded = true
+            }
+        }
+    }
+    
+    // Functie om gemiddelde rating te laden
+    private func loadAverageRating() {
+        let rating = LocalStorageManager.shared.getAverageRating(for: album.id)
+        withAnimation(.pitchEaseOut) {
+            averageRating = rating
+        }
+    }
+    
+    // Helper functie voor datum formatting
+    private func formatReleaseDate(_ dateString: String) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        
+        if let date = formatter.date(from: dateString) {
+            formatter.dateFormat = "yyyy"
+            return formatter.string(from: date)
+        }
+        
+        return dateString
+    }
+}
+
+// Lokale rating row view voor het tonen van een lokale rating in een lijst
+struct LocalRatingRowView: View {
+    let rating: LocalAlbumRating
     let showUserName: Bool
     
-    init(rating: AlbumRating, showUserName: Bool = true) {
+    init(rating: LocalAlbumRating, showUserName: Bool = true) {
         self.rating = rating
         self.showUserName = showUserName
     }
@@ -171,6 +277,47 @@ struct StarRatingView: View {
             return "star.leadinghalf.filled"
         } else {
             return "star"
+        }
+    }
+}
+
+// Moderne star rating view met custom styling
+struct ModernStarRatingView: View {
+    let rating: Double
+    let size: CGFloat
+    let maxRating: Int = 5
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(1...maxRating, id: \.self) { index in
+                Image(systemName: starType(for: index))
+                    .foregroundColor(starColor(for: index))
+                    .font(.system(size: size, weight: .semibold))
+            }
+        }
+    }
+    
+    // Functie om type ster te bepalen (vol, half, leeg)
+    private func starType(for index: Int) -> String {
+        let difference = rating - Double(index - 1)
+        
+        if difference >= 1.0 {
+            return "star.fill"
+        } else if difference >= 0.5 {
+            return "star.leadinghalf.filled"
+        } else {
+            return "star"
+        }
+    }
+    
+    // Functie om ster kleur te bepalen
+    private func starColor(for index: Int) -> Color {
+        let difference = rating - Double(index - 1)
+        
+        if difference >= 0.5 {
+            return .pitchStarFilled
+        } else {
+            return .pitchStarEmpty
         }
     }
 }
@@ -321,6 +468,223 @@ struct ShareButton: View {
         shareText += "\n\nGedeeld via PitchPlease 🎵"
         
         return shareText
+    }
+}
+
+// Moderne feed rating row view
+struct ModernFeedRatingRowView: View {
+    let rating: LocalAlbumRating
+    
+    var body: some View {
+        VStack(spacing: PitchSpacing.md) {
+            HStack(spacing: PitchSpacing.md) {
+                // Album artwork
+                AsyncImage(url: URL(string: rating.albumImageUrl ?? "")) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    ZStack {
+                        LinearGradient.pitchCardGradient
+                        Image(systemName: "music.note")
+                            .foregroundColor(.pitchTextTertiary)
+                    }
+                }
+                .frame(width: 60, height: 60)
+                .cornerRadius(PitchRadius.md)
+                .pitchShadowSmall()
+                
+                // Album en user info
+                VStack(alignment: .leading, spacing: PitchSpacing.xs) {
+                    Text(rating.albumName)
+                        .font(PitchTypography.headline)
+                        .foregroundColor(.pitchText)
+                        .lineLimit(1)
+                    
+                    Text(rating.artistName)
+                        .font(PitchTypography.callout)
+                        .foregroundColor(.pitchTextSecondary)
+                        .lineLimit(1)
+                    
+                    HStack(spacing: PitchSpacing.xs) {
+                        Circle()
+                            .fill(LinearGradient.pitchAccentGradient)
+                            .frame(width: 16, height: 16)
+                            .overlay(
+                                Text(String(rating.userDisplayName.prefix(1)).uppercased())
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(.white)
+                            )
+                        
+                        Text(rating.userDisplayName)
+                            .font(PitchTypography.caption)
+                            .foregroundColor(.pitchTextTertiary)
+                    }
+                }
+                
+                Spacer()
+                
+                // Rating stars
+                VStack(alignment: .trailing, spacing: PitchSpacing.xs) {
+                    ModernStarRatingView(rating: Double(rating.rating), size: 16)
+                    
+                    Text(formatDate(rating.createdAt))
+                        .font(PitchTypography.caption2)
+                        .foregroundColor(.pitchTextTertiary)
+                }
+            }
+            
+            // Review text (indien aanwezig)
+            if let review = rating.review, !review.isEmpty {
+                HStack {
+                    Text(review)
+                        .font(PitchTypography.body)
+                        .foregroundColor(.pitchTextSecondary)
+                        .multilineTextAlignment(.leading)
+                        .lineLimit(3)
+                    Spacer()
+                }
+                .padding(.top, PitchSpacing.xs)
+            }
+        }
+        .pitchCard(padding: PitchSpacing.md)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .short
+        formatter.timeStyle = .none
+        formatter.locale = Locale(identifier: "nl_NL")
+        return formatter.string(from: date)
+    }
+}
+
+// Moderne mijn ratings row view
+struct ModernMyRatingRowView: View {
+    let rating: LocalAlbumRating
+    
+    var body: some View {
+        HStack(spacing: PitchSpacing.md) {
+            // Album artwork
+            AsyncImage(url: URL(string: rating.albumImageUrl ?? "")) { image in
+                image
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+            } placeholder: {
+                ZStack {
+                    LinearGradient.pitchCardGradient
+                    Image(systemName: "music.note")
+                        .foregroundColor(.pitchTextTertiary)
+                }
+            }
+            .frame(width: 70, height: 70)
+            .cornerRadius(PitchRadius.md)
+            .pitchShadowMedium()
+            
+            // Album info
+            VStack(alignment: .leading, spacing: PitchSpacing.xs) {
+                Text(rating.albumName)
+                    .font(PitchTypography.headline)
+                    .foregroundColor(.pitchText)
+                    .lineLimit(2)
+                
+                Text(rating.artistName)
+                    .font(PitchTypography.callout)
+                    .foregroundColor(.pitchTextSecondary)
+                    .lineLimit(1)
+                
+                ModernStarRatingView(rating: Double(rating.rating), size: 14)
+                
+                Text(formatDate(rating.createdAt))
+                    .font(PitchTypography.caption2)
+                    .foregroundColor(.pitchTextTertiary)
+            }
+            
+            Spacer()
+            
+            // Edit indicator
+            Image(systemName: "chevron.right.circle.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(LinearGradient.pitchAccentGradient)
+                .opacity(0.7)
+        }
+        .pitchCard(padding: PitchSpacing.md)
+    }
+    
+    private func formatDate(_ date: Date) -> String {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .numeric
+        return formatter.localizedString(for: date, relativeTo: Date())
+    }
+}
+
+// Statistiek card view voor profiel
+struct StatCardView: View {
+    let icon: String
+    let title: String
+    let value: String
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: PitchSpacing.sm) {
+            Image(systemName: icon)
+                .font(.system(size: 24))
+                .foregroundColor(color)
+            
+            Text(value)
+                .font(PitchTypography.title1)
+                .foregroundColor(.pitchText)
+                .fontWeight(.bold)
+            
+            Text(title)
+                .font(PitchTypography.caption)
+                .foregroundColor(.pitchTextTertiary)
+        }
+        .frame(maxWidth: .infinity)
+        .pitchCard(padding: PitchSpacing.lg)
+    }
+}
+
+// Profiel optie row view
+struct ProfileOptionRow: View {
+    let icon: String
+    let title: String
+    let subtitle: String
+    
+    var body: some View {
+        HStack(spacing: PitchSpacing.md) {
+            // Icon
+            ZStack {
+                Circle()
+                    .fill(LinearGradient.pitchAccentGradient.opacity(0.2))
+                    .frame(width: 40, height: 40)
+                
+                Image(systemName: icon)
+                    .font(.system(size: 18))
+                    .foregroundColor(.pitchAccent)
+            }
+            
+            // Text content
+            VStack(alignment: .leading, spacing: PitchSpacing.xxs) {
+                Text(title)
+                    .font(PitchTypography.callout)
+                    .foregroundColor(.pitchText)
+                    .fontWeight(.semibold)
+                
+                Text(subtitle)
+                    .font(PitchTypography.caption)
+                    .foregroundColor(.pitchTextTertiary)
+                    .lineLimit(2)
+            }
+            
+            Spacer()
+            
+            // Chevron
+            Image(systemName: "chevron.right")
+                .font(.system(size: 14))
+                .foregroundColor(.pitchTextTertiary)
+        }
+        .pitchCard(padding: PitchSpacing.md)
     }
 }
 

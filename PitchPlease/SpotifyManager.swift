@@ -67,9 +67,9 @@ class SpotifyManager: ObservableObject {
     // Singleton instance
     static let shared = SpotifyManager()
     
-    // Spotify API credentials (vervang met jouw eigen values)
-    private let clientId = "YOUR_SPOTIFY_CLIENT_ID"
-    private let clientSecret = "YOUR_SPOTIFY_CLIENT_SECRET"
+    // Spotify API credentials
+    private let clientId = "ea77137366a8460097e540b473a7a6f9"
+    private let clientSecret = "36aeab88f705495cb29528c1747db042"
     
     // API endpoints
     private let baseUrl = "https://api.spotify.com/v1"

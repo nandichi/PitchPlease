@@ -7,8 +7,8 @@ Een iOS-app gebouwd met SwiftUI waarmee gebruikers albums kunnen zoeken via de S
 - 🔍 **Album Zoeken**: Zoek albums via de Spotify Web API
 - ⭐ **Beoordeling Systeem**: Geef albums een rating van 1-5 sterren met optionele review
 - 👥 **Sociale Functie**: Bekijk beoordelingen van andere gebruikers
-- 🔐 **Gebruikersaccounts**: Inloggen en registreren via Firebase Authentication
-- 💾 **Cloud Database**: Beoordelingen worden opgeslagen in Firebase Firestore
+- 🔐 **Gebruikersaccounts**: Lokale authenticatie en accountbeheer
+- 💾 **Lokale Database**: Beoordelingen worden lokaal opgeslagen via UserDefaults
 - 📱 **Delen**: Deel albums via AirDrop, sociale media of messaging
 - 🎨 **Modern UI**: Clean en intuïtieve interface met SwiftUI
 
@@ -17,43 +17,11 @@ Een iOS-app gebouwd met SwiftUI waarmee gebruikers albums kunnen zoeken via de S
 - iOS 15.0+
 - Xcode 15.0+
 - Swift 5.8+
-- Firebase Account (gratis)
 - Spotify Developer Account (gratis)
 
 ## Setup Instructies
 
-### 1. Dependencies Installeren
-
-Open je Xcode project en voeg de volgende packages toe via File → Add Package Dependencies:
-
-```
-https://github.com/firebase/firebase-ios-sdk
-```
-
-Selecteer de volgende Firebase producten:
-
-- FirebaseAuth
-- FirebaseFirestore
-- FirebaseCore
-
-### 2. Firebase Setup
-
-1. Ga naar [Firebase Console](https://console.firebase.google.com/)
-2. Maak een nieuw project aan
-3. Voeg een iOS app toe met Bundle ID: `com.yourname.PitchPlease`
-4. Download het `GoogleService-Info.plist` bestand
-5. Sleep dit bestand naar je Xcode project (zorg dat "Add to target" is aangevinkt)
-6. Ga naar Firebase Authentication → Sign-in method
-7. Schakel "Email/Password" in
-
-### 3. Firestore Database Setup
-
-1. Ga naar Firestore Database in Firebase Console
-2. Klik "Create database"
-3. Kies "Start in test mode" (voor development)
-4. Selecteer een locatie (bijvoorbeeld europe-west1)
-
-### 4. Spotify API Setup
+### 1. Spotify API Setup
 
 1. Ga naar [Spotify Developer Dashboard](https://developer.spotify.com/dashboard)
 2. Maak een nieuw app aan
@@ -66,11 +34,12 @@ private let clientId = "JOUW_SPOTIFY_CLIENT_ID"
 private let clientSecret = "JOUW_SPOTIFY_CLIENT_SECRET"
 ```
 
-### 5. Firebase Configuratie
+### 2. Build en Run
 
-1. Hernoem `GoogleService-Info-Template.plist` naar `GoogleService-Info.plist`
-2. Vul de juiste waarden in vanuit je Firebase project
-3. Of gebruik het gedownloade bestand van Firebase (aangeraden)
+1. Open het project in Xcode
+2. Selecteer je target device of simulator
+3. Klik op "Run" (Cmd+R)
+4. De app gebruikt lokale opslag, dus geen extra configuratie nodig!
 
 ## Project Structuur
 
@@ -78,43 +47,43 @@ private let clientSecret = "JOUW_SPOTIFY_CLIENT_SECRET"
 PitchPlease/
 ├── PitchPleaseApp.swift          # Main app entry point
 ├── ContentView.swift             # Template view (niet gebruikt in productie)
-├── FirebaseManager.swift         # Firebase authenticatie manager
+├── LocalStorageManager.swift     # Lokale authenticatie en data manager
 ├── SpotifyManager.swift          # Spotify API calls
-├── AlbumRating.swift            # Album rating model en database manager
 ├── AuthenticationView.swift      # Login/registratie views
 ├── MainTabView.swift            # Hoofdnavigatie met tabs
 ├── AlbumDetailView.swift        # Album detail en rating view
-├── UIComponents.swift           # Herbruikbare UI componenten
-└── GoogleService-Info.plist     # Firebase configuratie
+└── UIComponents.swift           # Herbruikbare UI componenten
 ```
 
-## Database Schema
+## Data Schema
 
-### users collectie
-
-```
-users/{userId}
-├── email: string
-├── displayName: string
-├── userId: string
-└── createdAt: timestamp
-```
-
-### album_ratings collectie
+### LocalUser
 
 ```
-album_ratings/{ratingId}
-├── id: string
-├── userId: string
-├── userDisplayName: string
-├── albumId: string
-├── albumName: string
-├── artistName: string
-├── albumImageUrl: string
-├── rating: number (1-5)
-├── review: string (optioneel)
-├── createdAt: timestamp
-└── updatedAt: timestamp
+{
+  id: string
+  email: string
+  displayName: string
+  createdAt: Date
+}
+```
+
+### LocalAlbumRating
+
+```
+{
+  id: string
+  userId: string
+  userDisplayName: string
+  albumId: string
+  albumName: string
+  artistName: string
+  albumImageUrl: string?
+  rating: number (1-5)
+  review: string? (optioneel)
+  createdAt: Date
+  updatedAt: Date
+}
 ```
 
 ## Gebruik
@@ -156,20 +125,20 @@ album_ratings/{ratingId}
 ### Architecture
 
 - **MVVM Pattern**: Models, Views, ViewModels
-- **Singleton Managers**: FirebaseManager, SpotifyManager, AlbumRatingManager
-- **Async/Await**: Moderne Swift concurrency
+- **Singleton Managers**: LocalStorageManager, SpotifyManager
+- **Async/Await**: Moderne Swift concurrency voor Spotify API
 - **SwiftUI**: Declarative UI framework
 
-### API's
+### API's & Storage
 
 - **Spotify Web API**: Voor album zoeken (Client Credentials flow)
-- **Firebase Auth**: Voor gebruikersauthenticatie
-- **Firebase Firestore**: Voor database operaties
+- **UserDefaults**: Voor lokale data opslag
+- **JSON Encoding/Decoding**: Voor data serialisatie
 
 ### Beveiliging
 
 - Client Credentials flow voor Spotify (geen gebruiker login required)
-- Firebase Security Rules (test mode voor development)
+- Lokale data opslag (privaat per app)
 - Input validatie voor ratings en reviews
 
 ## Development Tips
@@ -204,12 +173,6 @@ album_ratings/{ratingId}
 - [ ] Music player integratie
 
 ## Troubleshooting
-
-### Firebase Errors
-
-- Controleer of GoogleService-Info.plist correct is toegevoegd
-- Verificeer Firebase project configuratie
-- Check Firebase Console voor error logs
 
 ### Spotify API Errors
 
