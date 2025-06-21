@@ -627,19 +627,19 @@ struct ModernRatingFormView: View {
         isSaving = true
         errorMessage = ""
         
-        // Voor de demo gebruiken we een standaard gebruiker
-        let defaultUser = LocalUser(
-            id: "demo_user",
-            email: "demo@pitchplease.com",
-            displayName: "Demo Gebruiker"
-        )
+        // Gebruik de ingelogde gebruiker of maak een tijdelijke gebruiker aan
+        guard let currentUser = storageManager.currentUser else {
+            errorMessage = "Je moet ingelogd zijn om een rating te geven"
+            isSaving = false
+            return
+        }
         
         if let existingRating = existingRating {
             // Update bestaande rating
             let updatedRating = LocalAlbumRating(
                 id: existingRating.id,
-                userId: defaultUser.id,
-                userDisplayName: defaultUser.displayName,
+                userId: currentUser.id,
+                userDisplayName: currentUser.displayName,
                 albumId: album.id,
                 albumName: album.name,
                 artistName: album.artistNames,
@@ -653,8 +653,8 @@ struct ModernRatingFormView: View {
         } else {
             // Nieuwe rating aanmaken
             let newAlbumRating = LocalAlbumRating(
-                userId: defaultUser.id,
-                userDisplayName: defaultUser.displayName,
+                userId: currentUser.id,
+                userDisplayName: currentUser.displayName,
                 album: album,
                 rating: rating,
                 review: reviewText.isEmpty ? nil : reviewText

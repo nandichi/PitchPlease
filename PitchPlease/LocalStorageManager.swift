@@ -69,7 +69,7 @@ struct LocalAlbumRating: Codable, Identifiable {
         self.updatedAt = Date()
     }
     
-    // Direct initializer voor demo data
+    // Direct initializer
     init(id: String, userId: String, userDisplayName: String, albumId: String, albumName: String, artistName: String, albumImageUrl: String?, rating: Int, review: String?, createdAt: Date, updatedAt: Date = Date()) {
         self.id = id
         self.userId = userId
@@ -107,129 +107,6 @@ class LocalStorageManager: ObservableObject {
     
     private init() {
         loadCurrentUser()
-        createDemoDataIfNeeded()
-    }
-    
-    // MARK: - Demo Data Creation
-    
-    private func createDemoDataIfNeeded() {
-        // Controleer of er al demo data bestaat
-        let existingRatings = getAllRatings()
-        if existingRatings.isEmpty {
-            createDemoRatings()
-        }
-    }
-    
-    private func createDemoRatings() {
-        let demoUsers = [
-            LocalUser(id: "demo_user_1", email: "anna@example.com", displayName: "Anna Muziek"),
-            LocalUser(id: "demo_user_2", email: "peter@example.com", displayName: "Peter Pop"),
-            LocalUser(id: "demo_user_3", email: "lisa@example.com", displayName: "Lisa Rock"),
-            LocalUser(id: "demo_user_4", email: "mark@example.com", displayName: "Mark Jazz")
-        ]
-        
-        let demoRatings = [
-            LocalAlbumRating(
-                id: "demo_rating_1",
-                userId: "demo_user_1",
-                userDisplayName: "Anna Muziek",
-                albumId: "demo_album_1",
-                albumName: "Folklore",
-                artistName: "Taylor Swift",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/8b/c4/9c/8bc49c69-485c-5f36-88c3-df0526e5be78/20UMGIM66770.rgb.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Een prachtig album vol met intieme verhalen en geweldige songwriting. Taylor Swift laat zien dat ze een echte artiest is.",
-                createdAt: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_2",
-                userId: "demo_user_2",
-                userDisplayName: "Peter Pop",
-                albumId: "demo_album_2",
-                albumName: "Abbey Road",
-                artistName: "The Beatles",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/64/4f/7e/644f7e91-8e0b-7cae-7dfe-a1175c34cf8e/00602547885050.rgb.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Een tijdloos meesterwerk. Elk nummer is perfect en de productie is ongeëvenaard. Must-have in elke collectie!",
-                createdAt: Calendar.current.date(byAdding: .day, value: -1, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_3",
-                userId: "demo_user_3",
-                userDisplayName: "Lisa Rock",
-                albumId: "demo_album_3",
-                albumName: "OK Computer",
-                artistName: "Radiohead",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/1d/63/6b/1d636b9b-6d4d-8e35-8de8-1c8a8e6e4e5c/mzi.ftkdblxk.jpg/300x300bb.jpg",
-                rating: 4,
-                review: "Revolutionair album dat de grens tussen rock en elektronische muziek wegneemt. Paranoid Android is een meesterwerk.",
-                createdAt: Calendar.current.date(byAdding: .hour, value: -6, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_4",
-                userId: "demo_user_4",
-                userDisplayName: "Mark Jazz",
-                albumId: "demo_album_4",
-                albumName: "Kind of Blue",
-                artistName: "Miles Davis",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music124/v4/74/8c/98/748c98c0-3dc4-e48c-e8ea-e0ea8c56e8ac/886445635850.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Het beste jazz album ooit gemaakt. Miles Davis speelt als een god en elke muzikant draagt bij aan dit perfecte geheel.",
-                createdAt: Calendar.current.date(byAdding: .hour, value: -3, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_5",
-                userId: "demo_user_1",
-                userDisplayName: "Anna Muziek",
-                albumId: "demo_album_5",
-                albumName: "Random Access Memories",
-                artistName: "Daft Punk",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music125/v4/6e/9f/0e/6e9f0e9c-eb8e-6424-7a1c-e2f0a7b6e5dc/13UUUM1217562.rgb.jpg/300x300bb.jpg",
-                rating: 4,
-                review: "Daft Punk keert terug naar hun roots met echte instrumenten en perfecte productie. Get Lucky is een instant klassieker!",
-                createdAt: Calendar.current.date(byAdding: .hour, value: -1, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_6",
-                userId: "demo_user_2",
-                userDisplayName: "Peter Pop",
-                albumId: "demo_album_6",
-                albumName: "Thriller",
-                artistName: "Michael Jackson",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music112/v4/7a/5d/99/7a5d996e-7f54-5a5e-de48-90086346e4c2/mzi.mzkfrtql.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Het meest invloedrijke pop album aller tijden. Michael Jackson was een genie en dit album bewijst het.",
-                createdAt: Calendar.current.date(byAdding: .minute, value: -30, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_7",
-                userId: "demo_user_3",
-                userDisplayName: "Lisa Rock",
-                albumId: "demo_album_7",
-                albumName: "Led Zeppelin IV",
-                artistName: "Led Zeppelin",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music111/v4/b9/c5/20/b9c520c8-7f5e-9c9c-2f7e-19f3a8c7e4d5/mzi.cgfcrvnh.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Stairway to Heaven alleen al maakt dit tot een 5-sterren album. Pure rock perfectie van begin tot eind.",
-                createdAt: Calendar.current.date(byAdding: .minute, value: -15, to: Date()) ?? Date()
-            ),
-            LocalAlbumRating(
-                id: "demo_rating_8",
-                userId: "demo_user_4",
-                userDisplayName: "Mark Jazz",
-                albumId: "demo_album_8",
-                albumName: "The Dark Side of the Moon",
-                artistName: "Pink Floyd",
-                albumImageUrl: "https://is1-ssl.mzstatic.com/image/thumb/Music115/v4/3c/1b/a0/3c1ba0c8-60b4-8e44-95f5-7e9c8e7e8e8e/mzi.gqvulvqg.jpg/300x300bb.jpg",
-                rating: 5,
-                review: "Een conceptueel meesterwerk dat je meeneemt op een emotionele reis. Time en Money zijn absolute klassiekers.",
-                createdAt: Date()
-            )
-        ]
-        
-        // Sla demo users en ratings op
-        saveUsers(demoUsers)
-        saveRatings(demoRatings)
     }
     
     // MARK: - User Management

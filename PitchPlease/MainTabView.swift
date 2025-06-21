@@ -22,11 +22,25 @@ struct MainTabView: View {
                     Text("Feed")
                 }
             
+            // Discovery tab - aanbevelingen
+            DiscoveryView()
+                .tabItem {
+                    Image(systemName: "sparkles")
+                    Text("Ontdekken")
+                }
+            
             // My Ratings tab - eigen ratings
             MyRatingsView()
                 .tabItem {
                     Image(systemName: "star.circle.fill")
                     Text("Mijn Ratings")
+                }
+            
+            // Playlists tab - playlist beheer
+            PlaylistsView()
+                .tabItem {
+                    Image(systemName: "music.note.list")
+                    Text("Playlists")
                 }
             
             // Profile tab - gebruikersprofiel
@@ -545,8 +559,14 @@ struct MyRatingsView: View {
     private func loadMyRatings() {
         isLoading = true
         
-        // Voor demo gebruiken we alle ratings als "mijn ratings"
-        let userRatings = storageManager.getAllRatings()
+        // Haal alleen ratings van de ingelogde gebruiker op
+        let userRatings: [LocalAlbumRating]
+        if let currentUser = storageManager.currentUser {
+            userRatings = storageManager.getAllRatings().filter { $0.userId == currentUser.id }
+        } else {
+            userRatings = []
+        }
+        
         withAnimation(.pitchEaseOut) {
             myRatings = userRatings
             isLoading = false
@@ -577,7 +597,7 @@ struct ProfileView: View {
                                     .frame(width: 120, height: 120)
                                     .pitchShadowLarge()
                                 
-                                Text("Demo")
+                                Text("\(storageManager.currentUser?.displayName.prefix(1).uppercased() ?? "U")")
                                     .font(PitchTypography.title1)
                                     .foregroundColor(.white)
                                     .fontWeight(.bold)
@@ -587,12 +607,12 @@ struct ProfileView: View {
                             
                             // User info
                             VStack(spacing: PitchSpacing.sm) {
-                                Text("Demo Gebruiker")
+                                Text(storageManager.currentUser?.displayName ?? "Gebruiker")
                                     .font(PitchTypography.title2)
                                     .foregroundColor(.pitchText)
                                     .fontWeight(.semibold)
                                 
-                                Text("demo@pitchplease.com")
+                                Text(storageManager.currentUser?.email ?? "geen email")
                                     .font(PitchTypography.callout)
                                     .foregroundColor(.pitchTextSecondary)
                                 
